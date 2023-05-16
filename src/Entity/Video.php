@@ -29,6 +29,12 @@ class Video
     #[ORM\Column]
     private ?int $Validator_id = null;
 
+    #[ORM\ManyToOne(inversedBy: 'videos')]
+    private ?User $user = null;
+
+    #[ORM\ManyToOne(inversedBy: 'videos')]
+    private ?Route $route = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -90,6 +96,30 @@ class Video
     public function setValidatorId(int $Validator_id): self
     {
         $this->Validator_id = $Validator_id;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    public function getRoute(): ?Route
+    {
+        return $this->route;
+    }
+
+    public function setRoute(?Route $route): self
+    {
+        $this->route = $route;
 
         return $this;
     }

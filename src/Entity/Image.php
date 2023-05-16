@@ -29,6 +29,12 @@ class Image
     #[ORM\Column]
     private ?int $validator_id = null;
 
+    #[ORM\ManyToOne(inversedBy: 'images')]
+    private ?User $user = null;
+
+    #[ORM\ManyToOne(inversedBy: 'images')]
+    private ?Route $route = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -90,6 +96,30 @@ class Image
     public function setValidatorId(int $validator_id): self
     {
         $this->validator_id = $validator_id;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    public function getRoute(): ?Route
+    {
+        return $this->route;
+    }
+
+    public function setRoute(?Route $route): self
+    {
+        $this->route = $route;
 
         return $this;
     }

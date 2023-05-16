@@ -16,10 +16,10 @@ class Circuit
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $description_fr = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $description_en = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

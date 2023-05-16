@@ -22,10 +22,10 @@ class BleauVideo
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $create_date = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $description_fr = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $description_en = null;
 
     #[ORM\ManyToMany(targetEntity: Route::class, mappedBy: 'bleauVideos')]

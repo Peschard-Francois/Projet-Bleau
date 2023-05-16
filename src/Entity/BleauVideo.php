@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\BleauVideoRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -25,6 +27,14 @@ class BleauVideo
 
     #[ORM\Column(length: 255)]
     private ?string $description_en = null;
+
+    #[ORM\ManyToMany(targetEntity: Route::class, mappedBy: 'bleauVideos')]
+    private Collection $routes;
+
+    public function __construct()
+    {
+        $this->routes = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -75,6 +85,33 @@ class BleauVideo
     public function setDescriptionEn(string $description_en): self
     {
         $this->description_en = $description_en;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Route>
+     */
+    public function getRoutes(): Collection
+    {
+        return $this->routes;
+    }
+
+    public function addRoute(Route $route): self
+    {
+        if (!$this->routes->contains($route)) {
+            $this->routes->add($route);
+            $route->addBleauVideo($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRoute(Route $route): self
+    {
+        if ($this->routes->removeElement($route)) {
+            $route->removeBleauVideo($this);
+        }
 
         return $this;
     }

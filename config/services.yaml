@@ -19,6 +19,21 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+    App\OpenApi\JwtDecorator:
+        decorates: 'api_platform.openapi.factory'
+        arguments: [ '@.inner' ]
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+        # Tag just the UserListener:
+
+        #App\Doctrine\UserListener:
+        #tags: ['doctrine.orm.entity_listener']
+
+    # OR tag an entire directory:
+
+    App\Doctrine\:
+        resource: "../src/Doctrine/"
+        tags: ['doctrine.orm.entity_listener']
+

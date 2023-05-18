@@ -2,14 +2,35 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Put;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\EntityListeners(['App\Doctrine\UserListener'])]
+#[ApiResource(
+
+    operations: [
+    new Get(security: "is_granted('ROLE_SUPER_ADMIN')"),
+    new Post(security: "is_granted('ROLE_ADMIN')"),
+    new Put(security: "is_granted('ROLE_ADMIN')"),
+    new Delete(security: "is_granted('ROLE_ADMIN')"),
+    new GetCollection(),
+],)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -34,6 +55,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Video::class)]
     private Collection $videos;
+
+    #[ORM\Column(length: 255)]
+    private ?string $name = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $create_date = null;
 
     public function __construct()
     {
@@ -167,6 +194,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $video->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function getCreateDate(): ?\DateTimeInterface
+    {
+        return $this->create_date;
+    }
+
+    public function setCreateDate(\DateTimeInterface $create_date): self
+    {
+        $this->create_date = $create_date;
 
         return $this;
     }

@@ -2,69 +2,104 @@
 
 namespace App\Entity;
 
-use App\Repository\RouteRepository;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use App\Repository\RouteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RouteRepository::class)]
-#[ApiResource]
+#[ApiResource(
+
+    operations: [
+        new Get(),
+        new Post(security: "is_granted('ROLE_ADMIN')"),
+        new Put(security: "is_granted('ROLE_ADMIN')"),
+        new GetCollection(),
+    ],
+    normalizationContext: ['groups' => ['route_read']],
+    denormalizationContext: ['groups' => ['route_write']],
+    order: ['nbRepetition' => 'DESC']
+)]
 class Route
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['route_read','route_write'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['route_read','route_write'])]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $level = null;
-
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT,nullable: true)]
+    #[Groups(['route_read','route_write'])]
     private ?string $description_fr = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['route_read','route_write'])]
     private ?string $description_en = null;
 
     #[ORM\Column]
+    #[Groups(['route_read','route_write'])]
     private ?int $rating_value = null;
 
     #[ORM\Column]
+    #[Groups(['route_read','route_write'])]
     private ?int $nb_rating = null;
 
     #[ORM\Column]
-    private ?int $nb_repetition = null;
+    #[Groups(['route_read','route_write'])]
+    #[SerializedName('nb_repetition')]
+    private ?int $nbRepetition = null;
 
-    #[ORM\ManyToMany(targetEntity: Type::class, inversedBy: 'routes')]
+    #[ORM\ManyToMany(targetEntity: Type::class, inversedBy: 'routes', cascade: ['persist'])]
+    #[Groups(['route_read','route_write'])]
     private Collection $types;
 
-    #[ORM\ManyToMany(targetEntity: BleauVideo::class, inversedBy: 'routes')]
+    #[ORM\ManyToMany(targetEntity: BleauVideo::class, inversedBy: 'routes', cascade: ['persist'])]
+    #[Groups(['route_read','route_write'])]
     private Collection $bleauVideos;
 
-    #[ORM\ManyToMany(targetEntity: BleauImage::class, inversedBy: 'routes')]
+    #[ORM\ManyToMany(targetEntity: BleauImage::class, inversedBy: 'routes', cascade: ['persist'])]
+    #[Groups(['route_read','route_write'])]
     private Collection $bleauImages;
 
     #[ORM\ManyToMany(targetEntity: BleauDescription::class, inversedBy: 'routes')]
+    #[Groups(['route_read','route_write'])]
     private Collection $bleauDescriptions;
 
     #[ORM\ManyToOne(inversedBy: 'routes')]
+    #[Groups(['route_read','route_write'])]
     private ?Sector $sector = null;
 
     #[ORM\ManyToOne(inversedBy: 'routes')]
+    #[Groups(['route_read','route_write'])]
     private ?Setter $setter = null;
 
     #[ORM\ManyToMany(targetEntity: Circuit::class, inversedBy: 'routes')]
     private Collection $circuit;
 
     #[ORM\OneToMany(mappedBy: 'route', targetEntity: Image::class)]
+    #[Groups(['route_read','route_write'])]
     private Collection $images;
 
     #[ORM\OneToMany(mappedBy: 'route', targetEntity: Video::class)]
     private Collection $videos;
+
+    #[ORM\ManyToOne(inversedBy: 'routes')]
+    #[Groups(['route_read','route_write'])]
+    private ?Level $level = null;
+
 
     public function __construct()
     {
@@ -90,18 +125,6 @@ class Route
     public function setName(string $name): self
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getLevel(): ?string
-    {
-        return $this->level;
-    }
-
-    public function setLevel(string $level): self
-    {
-        $this->level = $level;
 
         return $this;
     }
@@ -156,12 +179,12 @@ class Route
 
     public function getNbRepetition(): ?int
     {
-        return $this->nb_repetition;
+        return $this->nbRepetition;
     }
 
     public function setNbRepetition(int $nb_repetition): self
     {
-        $this->nb_repetition = $nb_repetition;
+        $this->nbRepetition = $nb_repetition;
 
         return $this;
     }
@@ -366,6 +389,18 @@ class Route
                 $video->setRoute(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getLevel(): ?Level
+    {
+        return $this->level;
+    }
+
+    public function setLevel(?Level $level): self
+    {
+        $this->level = $level;
 
         return $this;
     }

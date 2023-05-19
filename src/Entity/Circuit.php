@@ -31,6 +31,9 @@ class Circuit
     #[ORM\OneToMany(mappedBy: 'circuit', targetEntity: Color::class)]
     private Collection $colors;
 
+    #[ORM\ManyToOne(inversedBy: 'circuits')]
+    private ?Sector $sector = null;
+
     public function __construct()
     {
         $this->routes = new ArrayCollection();
@@ -131,6 +134,18 @@ class Circuit
                 $color->setCircuit(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSector(): ?Sector
+    {
+        return $this->sector;
+    }
+
+    public function setSector(?Sector $sector): self
+    {
+        $this->sector = $sector;
 
         return $this;
     }

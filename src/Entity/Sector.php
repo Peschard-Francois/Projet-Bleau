@@ -2,38 +2,67 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\SectorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: SectorRepository::class)]
+#[ApiResource(
+
+    operations: [
+        new Get(),
+        new Post(),
+        new Put(security: "is_granted('ROLE_ADMIN')"),
+        new GetCollection(),
+    ],
+    normalizationContext: ['groups' => ['sector_read']],
+    denormalizationContext: ['groups' => ['sector_write']]
+)]
 class Sector
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['sector_read','route_read'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255,nullable: true)]
+    #[Groups(['sector_read','sector_write','route_read'])]
     private ?string $name = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT,nullable: true)]
+    #[Groups(['sector_read','sector_write','route_read'])]
     private ?string $description_fr = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT,nullable: true)]
+    #[Groups(['sector_read','sector_write','route_read'])]
     private ?string $description_en = null;
 
-    #[ORM\ManyToOne(inversedBy: 'sectors')]
+    #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'sectors')]
+    #[Groups(['sector_read','sector_write'])]
     private ?Region $region = null;
 
     #[ORM\OneToMany(mappedBy: 'sector', targetEntity: Route::class)]
+    #[Groups(['sector_read','sector_write'])]
     private Collection $routes;
+
+    #[ORM\OneToMany(mappedBy: 'sector', targetEntity: Circuit::class)]
+    #[Groups(['sector_read','sector_write'])]
+    private Collection $circuits;
 
     public function __construct()
     {
         $this->routes = new ArrayCollection();
+        $this->circuits = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -113,6 +142,36 @@ class Sector
             // set the owning side to null (unless already changed)
             if ($route->getSector() === $this) {
                 $route->setSector(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Circuit>
+     */
+    public function getCircuits(): Collection
+    {
+        return $this->circuits;
+    }
+
+    public function addCircuit(Circuit $circuit): self
+    {
+        if (!$this->circuits->contains($circuit)) {
+            $this->circuits->add($circuit);
+            $circuit->setSector($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCircuit(Circuit $circuit): self
+    {
+        if ($this->circuits->removeElement($circuit)) {
+            // set the owning side to null (unless already changed)
+            if ($circuit->getSector() === $this) {
+                $circuit->setSector(null);
             }
         }
 
